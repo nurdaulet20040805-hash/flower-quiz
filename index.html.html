@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Какая ты сегодня?</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Montserrat', 'Inter', sans-serif; background:#FDFBF7; }
+  .fade { animation: fade .5s ease both; }
+  @keyframes fade { from {opacity:0; transform:translateY(12px);} to {opacity:1; transform:none;} }
+  .card { box-shadow: 0 10px 40px rgba(232,180,184,.25); }
+  .opt { transition: all .2s; }
+  .opt:hover, .opt:active { border-color:#E8B4B8; background:#fdf3f4; transform:translateY(-1px); }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-stone-700">
+
+<main class="w-full max-w-md">
+  <div id="app" class="card bg-white rounded-3xl p-7 sm:p-9"></div>
+</main>
+
+<script>
+/* ====== НАСТРОЙКИ ====== */
+const EMAIL = "SIZDIN_EMAIL@gmail.com";   // <-- осында өз email-іңізді жазыңыз
+const WA_NUMBER = "787085458070";          // номер WhatsApp (формат: код страны + номер, без +)
+const WA_TEXT = "Здравствуйте! Я прошла тест, мой результат: «Дофаминовый букет». Хочу узнать подробности!";
+const INSTAGRAM_URL = "https://www.instagram.com/lamour_flower_ast?cplk=NGUwM2t5aHpyemRr";
+/* ======================= */
+
+const questions = [
+  ["Утреннее пробуждение в выходной день — какая картинка ближе?","Тихое утро после дождя, свежий воздух и аромат кофе.","Яркая солнечная улица, ритм города и энергия с первых минут."],
+  ["Какую роль ты обычно занимаешь в компании друзей?","«Уютный ангел»: та, кто выслушает и поддержит.","«Искра»: та, кто зажигает всех вокруг."],
+  ["Если тебе нужно оказаться в незнакомой компании, как ты себя поведешь?","Сначала понаблюдаю, оценю атмосферу.","Легко и непринужденно пойду на контакт."],
+  ["Какой стиль в одежде или эстетике тебе ближе?","Минимализм, пастельные тона, элегантность.","Яркие акценты, выразительные детали."],
+  ["Как ты принимаешь решения в нестандартных ситуациях?","Взвешенно, опираясь на интуицию.","Интуитивно и быстро, доверяя моменту."],
+  ["Что для тебя главное в проявлении заботы и любви?","Глубокое понимание, искренность.","Яркие эмоции, сюрпризы, романтика."],
+  ["Как ты восполняешь свой внутренний ресурс?","Уединение дома, книга, тихий вечер.","Активные прогулки, встреча с близкими."],
+  ["Как ты реагируешь, когда тебе делают комплимент или дарят подарок?","Смущенно улыбаюсь, ценя внутри.","Открыто радуюсь, сияю и делюсь эмоциями."],
+  ["Ты планируешь свою жизнь или плывешь по течению?","Люблю мягкое планирование и предсказуемость.","Живу моментом, обожаю сюрпризы."],
+  ["С какой стихией природы ты чувствуешь ментальную связь?","Спокойная гладь моря, утреннее облако.","Летний теплый дождь, яркое солнце."]
+];
+
+const app = document.getElementById('app');
+const answers = [];
+let lead = {name:'', phone:''};
+
+const btn = "w-full rounded-2xl py-4 font-semibold text-white transition active:scale-[.98] hover:opacity-90";
+const btnStyle = "background:#E8B4B8";
+
+function render(html){ app.innerHTML = '<div class="fade">'+html+'</div>'; }
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function welcome(){
+  render(`
+    <div class="text-center py-4">
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">Какая ты сегодня? 🌸</h1>
+      <p class="text-stone-500 mb-8 leading-relaxed">Узнай свой идеальный цветочный вайб, пройдя короткий тест за 45 секунд.</p>
+      <button onclick="leadForm()" class="${btn}" style="${btnStyle}">Начать тест ✨</button>
+    </div>`);
+}
+
+function leadForm(){
+  render(`
+    <form id="lf" class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium mb-2">Как тебя зовут?</label>
+        <input id="name" required placeholder="Твоё имя" class="w-full rounded-2xl border border-stone-200 px-4 py-3.5 outline-none focus:border-[#E8B4B8] focus:ring-2 focus:ring-[#E8B4B8]/30">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Твой номер WhatsApp для бонуса 🎁</label>
+        <input id="phone" type="tel" required placeholder="+7 700 000 00 00" class="w-full rounded-2xl border border-stone-200 px-4 py-3.5 outline-none focus:border-[#E8B4B8] focus:ring-2 focus:ring-[#E8B4B8]/30">
+      </div>
+      <p id="err" class="text-sm text-red-400 hidden"></p>
+      <button type="submit" class="${btn}" style="${btnStyle}">Далее ➡️</button>
+    </form>`);
+  document.getElementById('lf').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const err = document.getElementById('err');
+    if(name.length < 2){ err.textContent='Введи, пожалуйста, имя'; err.classList.remove('hidden'); return; }
+    if(phone.replace(/\D/g,'').length < 10){ err.textContent='Проверь номер WhatsApp'; err.classList.remove('hidden'); return; }
+    lead = {name, phone};
+    sendLead();
+    question(0);
+  });
+}
+
+function sendLead(){
+  // Заявка уходит на email через FormSubmit (без сервера)
+  fetch('https://formsubmit.co/ajax/' + EMAIL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify({
+      _subject: 'Новая заявка: цветочный квиз 🌸',
+      _template: 'table',
+      _captcha: 'false',
+      Имя: lead.name,
+      WhatsApp: lead.phone,
+      Время: new Date().toLocaleString('ru-RU')
+    })
+  }).catch(()=>{});
+}
+
+function question(i){
+  const [q,a,b] = questions[i];
+  const pct = Math.round(i/questions.length*100);
+  render(`
+    <div class="mb-6">
+      <div class="flex justify-between text-xs text-stone-400 mb-2"><span>Вопрос ${i+1} из ${questions.length}</span><span>${pct}%</span></div>
+      <div class="h-1.5 rounded-full bg-stone-100 overflow-hidden"><div class="h-full rounded-full" style="width:${pct}%;background:#E8B4B8"></div></div>
+    </div>
+    <h2 class="text-xl font-semibold mb-6 leading-snug">${esc(q)}</h2>
+    <div class="space-y-3">
+      <button class="opt w-full text-left rounded-2xl border border-stone-200 p-4 leading-snug" data-v="A"><b style="color:#d98e94">А.</b> ${esc(a)}</button>
+      <button class="opt w-full text-left rounded-2xl border border-stone-200 p-4 leading-snug" data-v="Б"><b style="color:#d98e94">Б.</b> ${esc(b)}</button>
+    </div>`);
+  app.querySelectorAll('.opt').forEach(el => el.onclick = () => {
+    answers.push(el.dataset.v);
+    i + 1 < questions.length ? question(i+1) : result();
+  });
+}
+
+function normPhone(p){
+  let d = p.replace(/\D/g,'');
+  if(d.length === 11 && d[0] === '8') d = '7' + d.slice(1);
+  if(d.length === 10) d = '7' + d;
+  return d;
+}
+
+function result(){
+  render(`
+    <div class="text-center">
+      <h2 class="text-2xl sm:text-3xl font-bold mb-4">✨ ${esc(lead.name)}, твой цветочный код расшифрован!</h2>
+      <p class="text-stone-500 leading-relaxed mb-5">Психологический срез показал: сегодня твоя аура требует особого заряда радости, тепла и эстетики. Тебе идеально подходит эксклюзивный концепт — <b class="text-stone-700">«Дофаминовый букет»</b>.</p>
+      <div class="rounded-2xl p-5 mb-6 text-left" style="background:#fdf3f4">
+        <p class="font-semibold mb-2">💐 Состав букета</p>
+        <p class="text-sm text-stone-600 leading-relaxed">Роскошная гортензия (символ изысканного вкуса), нежные кустовые спрей-розы и пышные хризантемы (заряд радости и объема).</p>
+      </div>
+      <div class="text-left mb-4">
+        <label class="block text-sm font-medium mb-2">Номер WhatsApp парня, которому отправить результат 💌</label>
+        <input id="bf" type="tel" placeholder="+7 700 000 00 00" class="w-full rounded-2xl border border-stone-200 px-4 py-3.5 outline-none focus:border-[#E8B4B8] focus:ring-2 focus:ring-[#E8B4B8]/30">
+        <p id="err2" class="text-sm text-red-400 mt-2 hidden">Проверь номер</p>
+      </div>
+      <button id="send" class="${btn}" style="${btnStyle}">Отправить ему в WhatsApp 💐</button>
+    </div>`);
+  document.getElementById('send').onclick = () => {
+    const num = normPhone(document.getElementById('bf').value);
+    if(num.length < 11){ document.getElementById('err2').classList.remove('hidden'); return; }
+    const text = 'Привет! 🌸 ' + lead.name + ' прошла тест «Какая ты сегодня?», и её результат: «Дофаминовый букет». ' +
+                 'Она хочет именно этот букет 💐 (гортензия, кустовые спрей-розы и пышные хризантемы). ' +
+                 'Выбрать и заказать можно здесь: ' + INSTAGRAM_URL + ' 😉';
+    sendFinal(num);
+    window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(text), '_blank');
+  };
+}
+
+function sendFinal(boyfriend){
+  fetch('https://formsubmit.co/ajax/' + EMAIL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify({
+      _subject: 'Квиз завершён: ' + lead.name + ' 🌸',
+      _template: 'table',
+      _captcha: 'false',
+      Имя: lead.name,
+      'WhatsApp девушки': lead.phone,
+      'WhatsApp парня': '+' + boyfriend,
+      Результат: 'Дофаминовый букет',
+      'Ответы (1-10)': answers.join(' '),
+      Время: new Date().toLocaleString('ru-RU')
+    })
+  }).catch(()=>{});
+}
+
+welcome();
+</script>
+</body>
+</html>
